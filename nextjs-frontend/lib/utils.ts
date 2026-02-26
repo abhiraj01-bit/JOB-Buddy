@@ -1,5 +1,6 @@
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { cache } from 'react';
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 import { APP_CONFIG_DEFAULTS } from '@/app-config';
 import type { AppConfig } from '@/app-config';
 
@@ -16,13 +17,14 @@ export interface SandboxConfig {
   | { type: 'boolean'; value: boolean }
   | null;
 }
+
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 // https://react.dev/reference/react/cache#caveats
 // > React will invalidate the cache for all memoized functions for each server request.
-export const getAppConfig = async (headers: Headers): Promise<AppConfig> => {
+export const getAppConfig = cache(async (headers: Headers): Promise<AppConfig> => {
   if (CONFIG_ENDPOINT) {
     const sandboxId = SANDBOX_ID ?? headers.get('x-sandbox-id') ?? '';
 
@@ -76,7 +78,7 @@ export const getAppConfig = async (headers: Headers): Promise<AppConfig> => {
   }
 
   return APP_CONFIG_DEFAULTS;
-};
+});
 
 // check provided accent colors against defaults
 // apply styles if they differ (or in development mode)
