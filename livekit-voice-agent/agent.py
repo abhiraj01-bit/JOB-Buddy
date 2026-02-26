@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import asyncio
 import os
+import traceback
 
 from livekit import agents, rtc
 from livekit.agents import AgentServer, AgentSession, Agent, room_io, get_job_context, function_tool, RunContext
@@ -127,11 +128,9 @@ class ProctorAgent(Agent):
             elif response and response != "ON_QUIZ":
                 print(f"[MONITOR] LLM response: '{response}'")
 
-server = AgentServer()
-
-@server.rtc_session()
 async def my_agent(ctx: agents.JobContext):
     print(f"[DEBUG] Starting my_agent for room: {ctx.room.name}")
+    await ctx.connect(auto_subscribe=agents.AutoSubscribe.SUBSCRIBE_ALL)
     llm = google.LLM(model="gemini-2.5-flash")
     
     session = AgentSession(
@@ -141,36 +140,46 @@ async def my_agent(ctx: agents.JobContext):
         vad=silero.VAD.load(),
     )
     
-    print("[DEBUG] Initializing Anam avatar...")
-    avatar = anam.AvatarSession(
-        persona_config=anam.PersonaConfig(
-            name="Liv",
-            avatarId="071b0286-4cce-4808-bee2-e642f1062de3",
-        ),
-    )
-    
-    print("[DEBUG] Starting Anam avatar...")
-    await avatar.start(session, room=ctx.room)
-    print("[DEBUG] Anam avatar started.")
-    
-    print("[DEBUG] Starting agent session...")
-    await session.start(
-        room=ctx.room,
-        agent=ProctorAgent(session, llm),
-        room_options=room_io.RoomOptions(
-            video_input=True,
-            audio_input=room_io.AudioInputOptions(
-                noise_cancellation=lambda params: noise_cancellation.BVCTelephony() if params.participant.kind == rtc.ParticipantKind.PARTICIPANT_KIND_SIP else noise_cancellation.BVC(),
+    try:
+        print("[DEBUG] Initializing Anam avatar...")
+        avatar = anam.AvatarSession(
+            persona_config=anam.PersonaConfig(
+                name="Mia",
+                avatarId="edf6fdcb-acab-44b8-b974-ded72665ee26",
             ),
-        ),
-    )
-    print("[DEBUG] Agent session started.")
-    
-    await session.generate_reply(
-        instructions="Greet the user warmly and professionally. Ask them to share their screen so we can begin the exam process."
-    )
-    print("[DEBUG] Initial reply generated.")
+        )
+        
+        print("[DEBUG] Starting Anam avatar...")
+        await avatar.start(session, room=ctx.room)
+        print("[DEBUG] Anam avatar started.")
+        
+        print("[DEBUG] Starting agent session...")
+        await session.start(
+            room=ctx.room,
+            agent=ProctorAgent(session, llm),
+            room_options=room_io.RoomOptions(
+                video_input=True,
+                audio_input=room_io.AudioInputOptions(
+                    noise_cancellation=lambda params: noise_cancellation.BVCTelephony() if params.participant.kind == rtc.ParticipantKind.PARTICIPANT_KIND_SIP else noise_cancellation.BVC(),
+                ),
+            ),
+        )
+        print("[DEBUG] Agent session started.")
+        
+        await session.generate_reply(
+            instructions="Greet the user warmly and professionally. Ask them to share their screen so we can begin the exam process."
+        )
+        print("[DEBUG] Initial reply generated.")
+    except Exception as e:
+        print(f"[ERROR] Agent initialization failed: {str(e)}")
+        print(traceback.format_exc())
 
 if __name__ == "__main__":
-    print(f"Starting main agent with name: {os.getenv('LIVEKIT_AGENT_NAME', 'unnamed')}")
-    agents.cli.run_app(server)
+    agent_name = os.getenv('LIVEKIT_AGENT_NAME', 'unnamed')
+    print(f"Starting main agent with name: {agent_name}")
+    options = agents.WorkerOptions(
+        agent_name=agent_name,
+        entrypoint_fnc=my_agent,
+        worker_type=agents.WorkerType.ROOM
+    )
+    agents.cli.run_app(options)

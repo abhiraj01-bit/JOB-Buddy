@@ -32,18 +32,18 @@ const initialState: AppState = {
 function persistRole(role: UserRole | null) {
   try {
     if (role) {
-      sessionStorage.setItem("proctorai_role", role)
+      localStorage.setItem("proctorai_role", role)
     } else {
-      sessionStorage.removeItem("proctorai_role")
+      localStorage.removeItem("proctorai_role")
     }
-  } catch {}
+  } catch { }
 }
 
 function getPersistedRole(): UserRole | null {
   try {
-    const role = sessionStorage.getItem("proctorai_role")
+    const role = localStorage.getItem("proctorai_role")
     if (role === "candidate" || role === "institution" || role === "admin") return role
-  } catch {}
+  } catch { }
   return null
 }
 

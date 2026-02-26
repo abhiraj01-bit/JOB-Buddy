@@ -87,7 +87,7 @@ function createParticipantToken(
   at.addGrant(grant);
 
   // Always dispatch an agent to this room (even if agentName is empty string or undefined)
-  const dispatchName = agentName || "";
+  const dispatchName = agentName || "proctor";
   at.roomConfig = new RoomConfiguration({
     agents: [{ agentName: dispatchName }],
   });

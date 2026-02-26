@@ -137,7 +137,9 @@ export function RpcHandlers() {
       try {
         // Quiz URL is dynamically generated based on current page
         const currentPath = window.location.pathname;
-        const quizUrl = currentPath.replace(/\/room\/?$/, '/quiz');
+        const match = currentPath.match(/\/exam-session\/([^/]+)\/room/);
+        const id = match ? match[1] : '';
+        const quizUrl = `/candidate/exam/${id}/quiz`;
 
         setQuizPopup({ quizUrl });
         return "Quiz link popup displayed";

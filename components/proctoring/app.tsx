@@ -4,7 +4,6 @@
 import { RoomAudioRenderer, StartAudio } from '@livekit/components-react';
 import type { AppConfig } from '@/app-config';
 import { ViewController } from '@/components/proctoring/view-controller';
-import { Toaster } from '@/components/livekit/toaster';
 import { RpcHandlers } from '@/components/proctoring/quiz-rpc-handlers';
 import { useAgentErrors } from '@/hooks/useAgentErrors';
 import { ConnectionProvider } from '@/hooks/useConnection';
@@ -32,7 +31,6 @@ export function App({ appConfig }: AppProps) {
       </main>
       <StartAudio label="Start Audio" />
       <RoomAudioRenderer />
-      <Toaster />
       <RpcHandlers />
     </ConnectionProvider>
   );
