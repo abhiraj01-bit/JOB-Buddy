@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import asyncio
+import os
 
 from livekit import agents, rtc
 from livekit.agents import AgentServer, AgentSession, Agent, room_io, get_job_context, function_tool, RunContext
@@ -130,6 +131,7 @@ server = AgentServer()
 
 @server.rtc_session()
 async def my_agent(ctx: agents.JobContext):
+    print(f"[DEBUG] Starting my_agent for room: {ctx.room.name}")
     llm = google.LLM(model="gemini-2.5-flash")
     
     session = AgentSession(
@@ -139,15 +141,19 @@ async def my_agent(ctx: agents.JobContext):
         vad=silero.VAD.load(),
     )
     
+    print("[DEBUG] Initializing Anam avatar...")
     avatar = anam.AvatarSession(
         persona_config=anam.PersonaConfig(
-            name="Quiz Proctor",
+            name="Liv",
             avatarId="071b0286-4cce-4808-bee2-e642f1062de3",
         ),
     )
     
+    print("[DEBUG] Starting Anam avatar...")
     await avatar.start(session, room=ctx.room)
+    print("[DEBUG] Anam avatar started.")
     
+    print("[DEBUG] Starting agent session...")
     await session.start(
         room=ctx.room,
         agent=ProctorAgent(session, llm),
@@ -158,10 +164,13 @@ async def my_agent(ctx: agents.JobContext):
             ),
         ),
     )
+    print("[DEBUG] Agent session started.")
     
     await session.generate_reply(
         instructions="Greet the user warmly and professionally. Ask them to share their screen so we can begin the exam process."
     )
+    print("[DEBUG] Initial reply generated.")
 
 if __name__ == "__main__":
+    print(f"Starting main agent with name: {os.getenv('LIVEKIT_AGENT_NAME', 'unnamed')}")
     agents.cli.run_app(server)

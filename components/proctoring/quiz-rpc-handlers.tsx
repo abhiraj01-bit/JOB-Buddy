@@ -102,11 +102,8 @@ function QuizLinkPopup({ quizUrl, onClose }: { quizUrl: string; onClose: () => v
             Click the link below to open the quiz in a new tab. The proctor will remain here to monitor your session.
           </p>
 
-          <a
-            href={quizUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block rounded-xl px-8 py-4 text-lg font-semibold text-white no-underline transition-all duration-300"
+          <button
+            className="inline-block rounded-xl px-8 py-4 text-lg font-semibold text-white no-underline transition-all duration-300 border-none cursor-pointer"
             style={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               boxShadow: isHoveringLink
@@ -114,12 +111,15 @@ function QuizLinkPopup({ quizUrl, onClose }: { quizUrl: string; onClose: () => v
                 : '0 4px 15px rgba(102, 126, 234, 0.4)',
               transform: isHoveringLink ? 'translateY(-2px)' : 'translateY(0)',
             }}
-            onClick={handleLinkClick}
+            onClick={() => {
+              window.open(quizUrl, "exam-window", "noopener,noreferrer,width=1200,height=800");
+              handleLinkClick();
+            }}
             onMouseEnter={() => setIsHoveringLink(true)}
             onMouseLeave={() => setIsHoveringLink(false)}
           >
             Open Quiz →
-          </a>
+          </button>
         </div>
       </div>
     </div>
@@ -137,7 +137,7 @@ export function RpcHandlers() {
       try {
         // Quiz URL is dynamically generated based on current page
         const currentPath = window.location.pathname;
-        const quizUrl = currentPath.endsWith('/') ? `${currentPath}quiz` : `${currentPath}/quiz`;
+        const quizUrl = currentPath.replace(/\/room\/?$/, '/quiz');
 
         setQuizPopup({ quizUrl });
         return "Quiz link popup displayed";
